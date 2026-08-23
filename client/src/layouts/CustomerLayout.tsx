@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useOrder } from "../context/OrderContext";
+import type { JSX } from "react/jsx-runtime";
 
 // ── Icons ────────────────────────────────────────────────
 function HomeIcon({ active }: { active: boolean }) {
@@ -61,11 +62,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: "home",   label: "Home",    path: "/customer",       matchPath: "/customer",       Icon: HomeIcon   },
-  { id: "search", label: "Search",  path: "/customer",       matchPath: undefined,          Icon: SearchIcon },
-  { id: "cart",   label: "Cart",    path: "/customer/cart",  matchPath: "/customer/cart",  Icon: CartIcon   },
-  { id: "orders", label: "Orders",  path: "/customer/order", matchPath: "/customer/order", Icon: PackageIcon},
-  { id: "profile",label: "Profile", path: null,              matchPath: undefined,          Icon: UserIcon   },
+  { id: "home", label: "Home", path: "/customer", matchPath: "/customer", Icon: HomeIcon },
+  { id: "search", label: "Search", path: "/customer", matchPath: undefined, Icon: SearchIcon },
+  { id: "cart", label: "Cart", path: "/customer/cart", matchPath: "/customer/cart", Icon: CartIcon },
+  { id: "orders", label: "Orders", path: "/customer/order", matchPath: "/customer/order", Icon: PackageIcon },
+  { id: "profile", label: "Profile", path: null, matchPath: undefined, Icon: UserIcon },
 ];
 
 // ── Layout ───────────────────────────────────────────────
@@ -84,7 +85,7 @@ export default function CustomerLayout() {
   }
 
   function getBadge(item: NavItem): number {
-    if (item.id === "cart")   return totalItems;
+    if (item.id === "cart") return totalItems;
     if (item.id === "orders") return order ? 1 : 0;
     return 0;
   }
@@ -105,7 +106,7 @@ export default function CustomerLayout() {
         <div className="flex items-stretch justify-around px-1 safe-area-inset-bottom">
           {navItems.map((item) => {
             const active = isActive(item);
-            const badge  = getBadge(item);
+            const badge = getBadge(item);
             const disabled = !item.path;
 
             return (
@@ -117,7 +118,7 @@ export default function CustomerLayout() {
                 className={[
                   "relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2",
                   "transition-colors duration-150 focus:outline-none",
-                  active   ? "text-orange-500"  : "text-zinc-400",
+                  active ? "text-orange-500" : "text-zinc-400",
                   disabled ? "opacity-35 cursor-not-allowed" : "hover:text-zinc-600",
                 ].join(" ")}
               >
