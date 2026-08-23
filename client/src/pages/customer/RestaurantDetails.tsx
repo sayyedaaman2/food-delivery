@@ -335,7 +335,7 @@ export default function RestaurantDetails() {
 
       {/* ── Main content ── */}
       {/* Extra bottom padding so floating cart bar doesn't cover content */}
-      <div className="max-w-5xl mx-auto px-4 py-6 pb-28">
+      <div className="max-w-5xl mx-auto px-4 py-6 pb-40 sm:pb-28">
 
         {/* ── Tab switcher ── */}
         <div className="bg-zinc-100 rounded-xl p-1 flex gap-1 mb-6">
@@ -527,7 +527,7 @@ export default function RestaurantDetails() {
 
       {/* ── Floating Cart Bar ── */}
       {totalItems > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-[#f8f7f5] to-transparent pointer-events-none">
+        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-[#f8f7f5] to-transparent pointer-events-none">
           <div className="max-w-5xl mx-auto pointer-events-auto">
             <button
               id="view-cart-bar"
