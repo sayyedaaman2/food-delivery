@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { CartProvider } from "./context/CartContext";
 
 // Customer pages
 import Home from "./pages/customer/Home";
@@ -17,24 +18,26 @@ import ActiveDelivery from "./pages/delivery/ActiveDelivery";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Customer */}
-        <Route path="/customer" element={<Home />} />
-        <Route path="/customer/restaurant" element={<RestaurantDetails />} />
-        <Route path="/customer/cart" element={<Cart />} />
-        <Route path="/customer/checkout" element={<Checkout />} />
-        <Route path="/customer/order" element={<OrderTracking />} />
+    <CartProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Customer */}
+          <Route path="/customer" element={<Home />} />
+          <Route path="/customer/restaurant" element={<RestaurantDetails />} />
+          <Route path="/customer/cart" element={<Cart />} />
+          <Route path="/customer/checkout" element={<Checkout />} />
+          <Route path="/customer/order" element={<OrderTracking />} />
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/order" element={<OrderDetails />} />
+          {/* Admin */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/order" element={<OrderDetails />} />
 
-        {/* Delivery */}
-        <Route path="/delivery" element={<DeliveryDashboard />} />
-        <Route path="/delivery/active" element={<ActiveDelivery />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Delivery */}
+          <Route path="/delivery" element={<DeliveryDashboard />} />
+          <Route path="/delivery/active" element={<ActiveDelivery />} />
+        </Routes>
+      </BrowserRouter>
+    </CartProvider>
   );
 }
 

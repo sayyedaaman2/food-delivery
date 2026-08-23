@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import { useCart } from "../../context/CartContext";
 import { restaurants } from "../../data/restaurants";
 import {
   menuItems,
@@ -19,13 +20,13 @@ const restaurant = restaurants[0];
 
 // ── Category config ──────────────────────────────────────
 const itemCategories: { id: string; label: string }[] = [
-  { id: "all",          label: "All" },
-  { id: "popular",      label: "🔥 Popular" },
-  { id: "breads",       label: "🫓 Breads" },
-  { id: "rice",         label: "🍚 Rice" },
-  { id: "main-course",  label: "🍛 Main Course" },
-  { id: "beverages",    label: "☕ Beverages" },
-  { id: "desserts",     label: "🍮 Desserts" },
+  { id: "all",         label: "All" },
+  { id: "popular",     label: "🔥 Popular" },
+  { id: "breads",      label: "🫓 Breads" },
+  { id: "rice",        label: "🍚 Rice" },
+  { id: "main-course", label: "🍛 Main Course" },
+  { id: "beverages",   label: "☕ Beverages" },
+  { id: "desserts",    label: "🍮 Desserts" },
 ];
 
 // ── Icons ────────────────────────────────────────────────
@@ -45,8 +46,61 @@ function ClockIcon() {
   );
 }
 
+function ShoppingBagIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 01-8 0" />
+    </svg>
+  );
+}
+
+// ── Quantity Control ─────────────────────────────────────
+function QuantityControl({
+  quantity,
+  onIncrease,
+  onDecrease,
+}: {
+  quantity: number;
+  onIncrease: () => void;
+  onDecrease: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5 bg-orange-50 border border-orange-200 rounded-lg overflow-hidden">
+      <button
+        onClick={(e) => { e.stopPropagation(); onDecrease(); }}
+        className="w-7 h-7 flex items-center justify-center text-orange-500 font-bold text-lg hover:bg-orange-100 transition-colors"
+      >
+        −
+      </button>
+      <span className="w-6 text-center text-sm font-bold text-zinc-900">
+        {quantity}
+      </span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onIncrease(); }}
+        className="w-7 h-7 flex items-center justify-center text-orange-500 font-bold text-lg hover:bg-orange-100 transition-colors"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 // ── Food Item Card ───────────────────────────────────────
-function FoodCard({ item }: { item: MenuItem }) {
+function FoodCard({
+  item,
+  onAdd,
+  onIncrease,
+  onDecrease,
+  quantity,
+}: {
+  item: MenuItem;
+  onAdd: () => void;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  quantity: number;
+}) {
   return (
     <Card padding="none" className="overflow-hidden flex flex-col">
       <div className="relative shrink-0">
@@ -83,9 +137,17 @@ function FoodCard({ item }: { item: MenuItem }) {
           <span className="font-extrabold text-zinc-900 text-sm">
             ₹{item.price}
           </span>
-          <Button variant="primary" size="sm">
-            + Add
-          </Button>
+          {quantity > 0 ? (
+            <QuantityControl
+              quantity={quantity}
+              onIncrease={onIncrease}
+              onDecrease={onDecrease}
+            />
+          ) : (
+            <Button variant="primary" size="sm" onClick={onAdd}>
+              + Add
+            </Button>
+          )}
         </div>
       </div>
     </Card>
@@ -93,13 +155,24 @@ function FoodCard({ item }: { item: MenuItem }) {
 }
 
 // ── Meal Combo Card ──────────────────────────────────────
-function MealComboCard({ combo }: { combo: MealCombo }) {
+function MealComboCard({
+  combo,
+  onAdd,
+  onIncrease,
+  onDecrease,
+  quantity,
+}: {
+  combo: MealCombo;
+  onAdd: () => void;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  quantity: number;
+}) {
   const savings = combo.originalPrice - combo.price;
 
   return (
     <Card padding="none" className="overflow-hidden">
       <div className="flex">
-        {/* Image */}
         <div className="relative shrink-0 w-28 sm:w-36">
           <img
             src={combo.image}
@@ -114,7 +187,6 @@ function MealComboCard({ combo }: { combo: MealCombo }) {
           </div>
         </div>
 
-        {/* Info */}
         <div className="p-3 sm:p-4 flex flex-col justify-between flex-1 min-w-0">
           <div>
             <div className="flex items-start justify-between gap-2">
@@ -125,8 +197,6 @@ function MealComboCard({ combo }: { combo: MealCombo }) {
                 Save ₹{savings}
               </span>
             </div>
-
-            {/* Items list */}
             <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
               {combo.items.join(" · ")}
             </p>
@@ -141,9 +211,17 @@ function MealComboCard({ combo }: { combo: MealCombo }) {
                 ₹{combo.originalPrice}
               </span>
             </div>
-            <Button variant="primary" size="sm">
-              Add Meal
-            </Button>
+            {quantity > 0 ? (
+              <QuantityControl
+                quantity={quantity}
+                onIncrease={onIncrease}
+                onDecrease={onDecrease}
+              />
+            ) : (
+              <Button variant="primary" size="sm" onClick={onAdd}>
+                Add Meal
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -154,11 +232,17 @@ function MealComboCard({ combo }: { combo: MealCombo }) {
 // ── Main Component ───────────────────────────────────────
 export default function RestaurantDetails() {
   const navigate = useNavigate();
+  const { addToCart, increaseQuantity, decreaseQuantity, items, totalItems, subtotal } =
+    useCart();
 
   const [activeTab, setActiveTab] = useState<"items" | "meals">("items");
   const [activeCategory, setActiveCategory] = useState("all");
   const [dietFilter, setDietFilter] = useState<"all" | DietType>("all");
   const [mealTimeFilter, setMealTimeFilter] = useState<"all" | MealTime>("all");
+
+  // Helper: get quantity of an item in cart
+  const getQty = (id: string) =>
+    items.find((i) => i.id === id)?.quantity ?? 0;
 
   // Filtered individual items
   const filteredItems = menuItems.filter((item) => {
@@ -184,10 +268,8 @@ export default function RestaurantDetails() {
           alt={restaurant.name}
           className="w-full h-52 sm:h-64 object-cover"
         />
-        {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
 
-        {/* Back button */}
         <button
           id="back-to-home"
           onClick={() => navigate("/customer")}
@@ -197,7 +279,6 @@ export default function RestaurantDetails() {
           <ArrowLeftIcon />
         </button>
 
-        {/* Restaurant identity at bottom of hero */}
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-center gap-2 mb-1.5">
             <Badge variant={restaurant.isOpen ? "open" : "closed"}>
@@ -220,7 +301,6 @@ export default function RestaurantDetails() {
       <div className="bg-white border-b border-zinc-100 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3.5">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
-            {/* Rating */}
             <span className="flex items-center gap-1.5 font-semibold">
               <span
                 className={[
@@ -234,29 +314,19 @@ export default function RestaurantDetails() {
                 {restaurant.reviews.toLocaleString()} ratings
               </span>
             </span>
-
             <span className="text-zinc-200">|</span>
-
             <span className="flex items-center gap-1">
               <ClockIcon />
               {restaurant.deliveryTime}
             </span>
-
             <span className="text-zinc-200">|</span>
-
             <span>₹{restaurant.priceForTwo} for two</span>
-
-            {restaurant.deliveryFee === 0 ? (
+            {restaurant.deliveryFee === 0 && (
               <>
                 <span className="text-zinc-200">|</span>
                 <span className="font-semibold text-green-600">
                   🚚 Free delivery
                 </span>
-              </>
-            ) : (
-              <>
-                <span className="text-zinc-200">|</span>
-                <span>₹{restaurant.deliveryFee} delivery fee</span>
               </>
             )}
           </div>
@@ -264,7 +334,8 @@ export default function RestaurantDetails() {
       </div>
 
       {/* ── Main content ── */}
-      <div className="max-w-5xl mx-auto px-4 py-6 pb-12">
+      {/* Extra bottom padding so floating cart bar doesn't cover content */}
+      <div className="max-w-5xl mx-auto px-4 py-6 pb-28">
 
         {/* ── Tab switcher ── */}
         <div className="bg-zinc-100 rounded-xl p-1 flex gap-1 mb-6">
@@ -297,7 +368,6 @@ export default function RestaurantDetails() {
         {/* ══ Individual Items Tab ══ */}
         {activeTab === "items" && (
           <div>
-            {/* Category pills */}
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-5">
               {itemCategories.map((cat) => (
                 <button
@@ -317,11 +387,26 @@ export default function RestaurantDetails() {
               ))}
             </div>
 
-            {/* Food grid */}
             {filteredItems.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredItems.map((item) => (
-                  <FoodCard key={item.id} item={item} />
+                  <FoodCard
+                    key={item.id}
+                    item={item}
+                    quantity={getQty(item.id)}
+                    onAdd={() =>
+                      addToCart({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        image: item.image,
+                        diet: item.diet,
+                        type: "item",
+                      })
+                    }
+                    onIncrease={() => increaseQuantity(item.id)}
+                    onDecrease={() => decreaseQuantity(item.id)}
+                  />
                 ))}
               </div>
             ) : (
@@ -336,13 +421,12 @@ export default function RestaurantDetails() {
         {/* ══ Meal Combos Tab ══ */}
         {activeTab === "meals" && (
           <div>
-            {/* Header */}
             <div className="mb-5">
               <p className="text-base font-extrabold text-zinc-900">
                 Choose your preference
               </p>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Select your diet and meal time to find the perfect combo
+                Select diet and meal time to find the perfect combo
               </p>
             </div>
 
@@ -350,9 +434,9 @@ export default function RestaurantDetails() {
             <div className="flex flex-wrap gap-2.5 mb-4">
               {(
                 [
-                  { id: "all",    label: "All",      emoji: "✨", activeClass: "bg-zinc-800 text-white" },
-                  { id: "veg",    label: "Veg",      emoji: "🥗", activeClass: "bg-green-500 text-white" },
-                  { id: "nonveg", label: "Non-Veg",  emoji: "🍗", activeClass: "bg-red-500 text-white" },
+                  { id: "all",    label: "All",     emoji: "✨", activeClass: "bg-zinc-800 text-white" },
+                  { id: "veg",    label: "Veg",     emoji: "🥗", activeClass: "bg-green-500 text-white" },
+                  { id: "nonveg", label: "Non-Veg", emoji: "🍗", activeClass: "bg-red-500 text-white" },
                 ] as const
               ).map((d) => (
                 <button
@@ -400,7 +484,6 @@ export default function RestaurantDetails() {
               ))}
             </div>
 
-            {/* Divider with label */}
             <div className="flex items-center gap-3 mb-5">
               <div className="h-px flex-1 bg-zinc-200" />
               <span className="text-xs font-bold text-zinc-400 tracking-widest uppercase">
@@ -409,11 +492,26 @@ export default function RestaurantDetails() {
               <div className="h-px flex-1 bg-zinc-200" />
             </div>
 
-            {/* Combo cards */}
             {filteredCombos.length > 0 ? (
               <div className="space-y-4">
                 {filteredCombos.map((combo) => (
-                  <MealComboCard key={combo.id} combo={combo} />
+                  <MealComboCard
+                    key={combo.id}
+                    combo={combo}
+                    quantity={getQty(combo.id)}
+                    onAdd={() =>
+                      addToCart({
+                        id: combo.id,
+                        name: combo.name,
+                        price: combo.price,
+                        image: combo.image,
+                        diet: combo.diet,
+                        type: "meal",
+                      })
+                    }
+                    onIncrease={() => increaseQuantity(combo.id)}
+                    onDecrease={() => decreaseQuantity(combo.id)}
+                  />
                 ))}
               </div>
             ) : (
@@ -425,8 +523,33 @@ export default function RestaurantDetails() {
             )}
           </div>
         )}
-
       </div>
+
+      {/* ── Floating Cart Bar ── */}
+      {totalItems > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-[#f8f7f5] to-transparent pointer-events-none">
+          <div className="max-w-5xl mx-auto pointer-events-auto">
+            <button
+              id="view-cart-bar"
+              onClick={() => navigate("/customer/cart")}
+              className="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-2xl py-4 px-5 flex items-center justify-between shadow-xl shadow-orange-200 transition-all duration-150"
+            >
+              <div className="flex items-center gap-3">
+                <span className="bg-orange-600 text-white text-xs font-extrabold w-6 h-6 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+                <span className="font-bold text-sm">
+                  {totalItems === 1 ? "1 item" : `${totalItems} items`} in cart
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold">₹{subtotal}</span>
+                <ShoppingBagIcon />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
