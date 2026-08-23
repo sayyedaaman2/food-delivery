@@ -25,6 +25,15 @@
   animation: fadeInUp 0.4s ease-out 0.25s both;
 }
 
+@keyframes driveRight {
+  0%   { left: 8%; }
+  100% { left: 68%; }
+}
+.animate-drive {
+  animation: driveRight 2.8s ease-in-out infinite alternate;
+  position: absolute;
+}
+
 /* ── Base ───────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;

@@ -4,6 +4,7 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import { useCart } from "../../context/CartContext";
+import { useOrder } from "../../context/OrderContext";
 
 // ── Constants ────────────────────────────────────────────
 const DELIVERY_FEE = 30;
@@ -124,6 +125,7 @@ function OrderConfirmation({
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCart();
+  const { setOrder } = useOrder();
 
   const [selectedAddress, setSelectedAddress] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState("cod");
@@ -159,23 +161,24 @@ export default function Checkout() {
   }
 
   function handleTrackOrder() {
-    clearCart();
-    navigate("/customer/order", {
-      state: {
-        orderId,
-        total,
-        restaurant: "Sharma's Kitchen",
-        address: addresses[selectedAddress].address,
-        payment:
-          paymentMethods.find((p) => p.id === selectedPayment)?.label ?? "",
-        items: items.map((i) => ({
-          name: i.name,
-          quantity: i.quantity,
-          price: i.price,
-          diet: i.diet,
-        })),
-      },
+    setOrder({
+      id: orderId,
+      status: "preparing",
+      restaurant: "Sharma's Kitchen",
+      items: items.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        price: i.price,
+        diet: i.diet as "veg" | "nonveg",
+      })),
+      total,
+      address: addresses[selectedAddress].address,
+      payment:
+        paymentMethods.find((p) => p.id === selectedPayment)?.label ?? "",
+      placedAt: new Date(),
     });
+    clearCart();
+    navigate("/customer/order");
   }
 
   return (

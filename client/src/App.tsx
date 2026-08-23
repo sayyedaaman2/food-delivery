@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
+import { OrderProvider } from "./context/OrderContext";
 
 // Customer pages
 import Home from "./pages/customer/Home";
@@ -18,8 +19,9 @@ import ActiveDelivery from "./pages/delivery/ActiveDelivery";
 
 function App() {
   return (
-    <CartProvider>
-      <BrowserRouter>
+    <OrderProvider>
+      <CartProvider>
+        <BrowserRouter>
         <Routes>
           {/* Customer */}
           <Route path="/customer" element={<Home />} />
@@ -36,8 +38,9 @@ function App() {
           <Route path="/delivery" element={<DeliveryDashboard />} />
           <Route path="/delivery/active" element={<ActiveDelivery />} />
         </Routes>
-      </BrowserRouter>
-    </CartProvider>
+        </BrowserRouter>
+      </CartProvider>
+    </OrderProvider>
   );
 }
 
