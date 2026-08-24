@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Badge from "../../components/ui/Badge";
 import DeliveryMap from "../../components/map/DeliveryMap";
 import { deliveryRequests, activeDelivery as activeDeliveryDefault } from "../../data/delivery";
+import { deliveryRoute } from "../../data/locations";
 
 export type DeliveryStatus =
   | "accepted"
@@ -127,6 +128,53 @@ export default function ActiveDelivery() {
   const [status, setStatus] = useState<DeliveryStatus>("accepted");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
+  // Live Tracking simulation state
+  const [routeIndex, setRouteIndex] = useState<number>(0);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+
+  const totalSteps = deliveryRoute.length - 1;
+  const isAtDestination = routeIndex === totalSteps;
+  const progressPct = Math.round((routeIndex / totalSteps) * 100);
+
+  // Dynamic distance calculation based on routeIndex
+  const initialDistance = 2.4; // km
+  const remainingDistNum = Math.max(0.1, initialDistance * (1 - routeIndex / totalSteps));
+  const distanceDisplay = isAtDestination ? "Arrived at Customer" : `${remainingDistNum.toFixed(1)} km away`;
+
+  // Start live movement simulation along deliveryRoute
+  function startLiveTracking() {
+    if (isSimulating) return;
+    setIsSimulating(true);
+    if (status !== "on_the_way" && status !== "delivered") {
+      setStatus("on_the_way");
+    }
+  }
+
+  // Simulation timer loop
+  useEffect(() => {
+    if (!isSimulating) return;
+
+    const timer = setInterval(() => {
+      setRouteIndex((prev) => {
+        if (prev >= totalSteps - 1) {
+          clearInterval(timer);
+          setIsSimulating(false);
+          return totalSteps;
+        }
+        return prev + 1;
+      });
+    }, 1600);
+
+    return () => clearInterval(timer);
+  }, [isSimulating, totalSteps]);
+
+  // Handle auto-arrival message when route completes
+  useEffect(() => {
+    if (isAtDestination && status === "on_the_way") {
+      setActionMessage("✓ Delivery Agent arrived at customer location!");
+    }
+  }, [isAtDestination, status]);
+
   const currentStepIdx = STATUS_STEPS.findIndex((s) => s.id === status);
 
   // Handle primary action button click
@@ -157,6 +205,10 @@ export default function ActiveDelivery() {
 
   // Get primary button configuration
   function getPrimaryActionConfig() {
+    if (isAtDestination && status !== "delivered") {
+      return { label: "Mark As Delivered", style: "bg-green-600 hover:bg-green-700 text-white" };
+    }
+
     switch (status) {
       case "accepted":
         return { label: "Confirm Arrival at Restaurant", style: "bg-blue-600 hover:bg-blue-700 text-white" };
@@ -209,8 +261,70 @@ export default function ActiveDelivery() {
         </div>
       </div>
 
-      {/* ── Live Tracking Leaflet Map ── */}
-      <DeliveryMap className="h-64 sm:h-80 w-full shadow-md" />
+      {/* ── Live Tracking Leaflet Map (with dynamic agent position) ── */}
+      <DeliveryMap
+        className="h-64 sm:h-80 w-full shadow-md"
+        agentPosition={deliveryRoute[routeIndex]}
+        fullRoute={deliveryRoute}
+      />
+
+      {/* ── Live Tracking & Progress Card ── */}
+      {status !== "delivered" && (
+        <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Delivery Partner</p>
+              <p className="font-extrabold text-zinc-900 text-sm">Rahul Kumar</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Distance</p>
+              <p className={`font-extrabold text-sm ${isAtDestination ? "text-green-600" : "text-orange-500"}`}>
+                {distanceDisplay}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress Bar & Percentage */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="text-zinc-500">Delivery Progress</span>
+              <span className="text-orange-600">{progressPct}% completed</span>
+            </div>
+            <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden p-0.5 border border-zinc-200">
+              <div
+                className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Start Live Tracking Trigger */}
+          {!isSimulating && !isAtDestination && (
+            <button
+              id="start-live-tracking-btn"
+              onClick={startLiveTracking}
+              className="w-full py-3 rounded-xl bg-orange-500 text-white text-xs font-extrabold hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              Start Live Tracking
+            </button>
+          )}
+
+          {isSimulating && (
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-orange-600 bg-orange-50 py-2.5 rounded-xl border border-orange-200 animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+              Live Tracking active — Agent moving...
+            </div>
+          )}
+
+          {isAtDestination && (
+            <div className="bg-green-50 border border-green-200 text-green-700 text-xs font-bold py-2.5 rounded-xl text-center flex items-center justify-center gap-2">
+              <span>✓</span>
+              <span>Delivery Arrived at Customer</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Interactive Action Toast ── */}
       {actionMessage && (
@@ -227,8 +341,8 @@ export default function ActiveDelivery() {
 
         <div className="space-y-3">
           {STATUS_STEPS.map((step, idx) => {
-            const isCompleted = idx < currentStepIdx;
-            const isCurrent   = idx === currentStepIdx;
+            const isCompleted = idx < currentStepIdx || (isAtDestination && step.id === "on_the_way");
+            const isCurrent   = idx === currentStepIdx && !isAtDestination;
 
             return (
               <div key={step.id} className="flex items-center gap-3">
@@ -341,10 +455,10 @@ export default function ActiveDelivery() {
 
             <div className="flex items-center gap-4 text-xs font-semibold text-zinc-400 pt-1">
               <span className="flex items-center gap-1">
-                <MapPinIcon /> 2.4 km
+                <MapPinIcon /> {distanceDisplay}
               </span>
               <span className="flex items-center gap-1">
-                <ClockIcon /> ~12 min away
+                <ClockIcon /> {isAtDestination ? "Arrived" : "~12 min away"}
               </span>
             </div>
 

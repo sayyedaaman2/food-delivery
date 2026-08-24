@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
-import { locations } from "../../data/locations";
+import { locations, deliveryRoute, type LatLng } from "../../data/locations";
 
 // Custom Leaflet DivIcons using clean HTML & Emojis
 const createCustomIcon = (emoji: string, label: string, bgClass: string) => {
@@ -20,21 +20,22 @@ const createCustomIcon = (emoji: string, label: string, bgClass: string) => {
 };
 
 const restaurantIcon = createCustomIcon("🏪", "Sharma's Kitchen", "bg-white text-zinc-900 border-zinc-200");
-const agentIcon      = createCustomIcon("🚴", "Rahul (Agent)", "bg-orange-500 text-white border-orange-600");
+const agentIcon      = createCustomIcon("🚴", "Rahul (Agent)", "bg-orange-500 text-white border-orange-600 shadow-orange-300");
 const customerIcon   = createCustomIcon("📍", "Aaman (Customer)", "bg-zinc-900 text-white border-zinc-900");
 
 interface DeliveryMapProps {
   className?: string;
+  agentPosition?: LatLng;
+  fullRoute?: LatLng[];
 }
 
-export default function DeliveryMap({ className = "h-72 w-full" }: DeliveryMapProps) {
+export default function DeliveryMap({
+  className = "h-72 w-full",
+  agentPosition,
+  fullRoute = deliveryRoute,
+}: DeliveryMapProps) {
   const center: [number, number] = [17.6653, 75.9101];
-
-  const routePositions = [
-    locations.restaurant,
-    locations.deliveryAgent,
-    locations.customer,
-  ];
+  const currentAgentPos = agentPosition || locations.deliveryAgent;
 
   return (
     <div className={`relative rounded-2xl overflow-hidden shadow-sm border border-zinc-200 z-0 ${className}`}>
@@ -50,9 +51,9 @@ export default function DeliveryMap({ className = "h-72 w-full" }: DeliveryMapPr
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Route Polyline */}
+        {/* Full Route Polyline */}
         <Polyline
-          positions={routePositions}
+          positions={fullRoute}
           pathOptions={{
             color: "#f97316",
             weight: 4,
@@ -71,12 +72,12 @@ export default function DeliveryMap({ className = "h-72 w-full" }: DeliveryMapPr
           </Popup>
         </Marker>
 
-        {/* Delivery Agent Marker */}
-        <Marker position={locations.deliveryAgent} icon={agentIcon}>
+        {/* Delivery Agent Marker (Dynamic position) */}
+        <Marker position={currentAgentPos} icon={agentIcon}>
           <Popup>
             <div className="text-xs font-semibold">
               <p className="font-bold text-orange-600">Rahul (Delivery Agent)</p>
-              <p className="text-zinc-500">En Route</p>
+              <p className="text-zinc-500">En Route to Customer</p>
             </div>
           </Popup>
         </Marker>
