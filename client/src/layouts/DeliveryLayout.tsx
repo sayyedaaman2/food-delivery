@@ -294,7 +294,7 @@ export default function DeliveryLayout() {
         {/* ── Page content ── */}
         {/* pb-20 gives space above the mobile bottom nav */}
         <main className="flex-1 overflow-auto pb-20 md:pb-0">
-          <Outlet />
+          <Outlet context={{ isOnline }} />
         </main>
       </div>
 
