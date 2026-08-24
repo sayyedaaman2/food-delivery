@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Badge from "../../components/ui/Badge";
+import DeliveryMap from "../../components/map/DeliveryMap";
 import { deliveryRequests, activeDelivery as activeDeliveryDefault } from "../../data/delivery";
 
 export type DeliveryStatus =
@@ -207,6 +208,9 @@ export default function ActiveDelivery() {
           <p className="font-bold text-zinc-900 truncate">{customerName}</p>
         </div>
       </div>
+
+      {/* ── Live Tracking Leaflet Map ── */}
+      <DeliveryMap className="h-64 sm:h-80 w-full shadow-md" />
 
       {/* ── Interactive Action Toast ── */}
       {actionMessage && (
