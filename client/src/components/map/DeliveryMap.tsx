@@ -1,6 +1,13 @@
+import React from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
-import L from "leaflet";
+import L, { type LatLngExpression, type LatLngTuple } from "leaflet";
 import { locations, deliveryRoute, type LatLng } from "../../data/locations";
+
+// Cast react-leaflet components to React.ComponentType<any> to resolve React 19 JSX prop type mismatches with Leaflet v5
+const LeafletMapContainer = MapContainer as React.ComponentType<any>;
+const LeafletTileLayer    = TileLayer as React.ComponentType<any>;
+const LeafletMarker       = Marker as React.ComponentType<any>;
+const LeafletPolyline     = Polyline as React.ComponentType<any>;
 
 // Custom Leaflet DivIcons using clean HTML & Emojis
 const createCustomIcon = (emoji: string, label: string, bgClass: string) => {
@@ -34,26 +41,29 @@ export default function DeliveryMap({
   agentPosition,
   fullRoute = deliveryRoute,
 }: DeliveryMapProps) {
-  const center: [number, number] = [17.6653, 75.9101];
-  const currentAgentPos = agentPosition || locations.deliveryAgent;
+  const centerPos: LatLngExpression = [17.6653, 75.9101];
+  const currentAgentPos: LatLngTuple = (agentPosition || locations.deliveryAgent) as LatLngTuple;
+  const restaurantPos: LatLngTuple = locations.restaurant as LatLngTuple;
+  const customerPos: LatLngTuple = locations.customer as LatLngTuple;
+  const routePolyline: LatLngExpression[] = fullRoute as LatLngExpression[];
 
   return (
     <div className={`relative rounded-2xl overflow-hidden shadow-sm border border-zinc-200 z-0 ${className}`}>
-      <MapContainer
-        center={center}
+      <LeafletMapContainer
+        center={centerPos}
         zoom={14}
         scrollWheelZoom={false}
         className="w-full h-full"
         style={{ background: "#f8f7f5" }}
       >
-        <TileLayer
+        <LeafletTileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {/* Full Route Polyline */}
-        <Polyline
-          positions={fullRoute}
+        <LeafletPolyline
+          positions={routePolyline}
           pathOptions={{
             color: "#f97316",
             weight: 4,
@@ -63,35 +73,35 @@ export default function DeliveryMap({
         />
 
         {/* Restaurant Marker */}
-        <Marker position={locations.restaurant} icon={restaurantIcon}>
+        <LeafletMarker position={restaurantPos} icon={restaurantIcon}>
           <Popup>
             <div className="text-xs font-semibold">
               <p className="font-bold text-zinc-900">Sharma's Kitchen</p>
               <p className="text-zinc-500">Pickup Location</p>
             </div>
           </Popup>
-        </Marker>
+        </LeafletMarker>
 
         {/* Delivery Agent Marker (Dynamic position) */}
-        <Marker position={currentAgentPos} icon={agentIcon}>
+        <LeafletMarker position={currentAgentPos} icon={agentIcon}>
           <Popup>
             <div className="text-xs font-semibold">
               <p className="font-bold text-orange-600">Rahul (Delivery Agent)</p>
               <p className="text-zinc-500">En Route to Customer</p>
             </div>
           </Popup>
-        </Marker>
+        </LeafletMarker>
 
         {/* Customer Marker */}
-        <Marker position={locations.customer} icon={customerIcon}>
+        <LeafletMarker position={customerPos} icon={customerIcon}>
           <Popup>
             <div className="text-xs font-semibold">
               <p className="font-bold text-zinc-900">Aaman's Home</p>
               <p className="text-zinc-500">Dropoff Location</p>
             </div>
           </Popup>
-        </Marker>
-      </MapContainer>
+        </LeafletMarker>
+      </LeafletMapContainer>
     </div>
   );
 }
