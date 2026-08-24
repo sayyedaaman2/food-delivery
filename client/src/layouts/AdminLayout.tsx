@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
+import { AdminOrderProvider } from "../context/AdminOrderContext";
 
 // ── Icons ────────────────────────────────────────────────
 function DashboardIcon() {
@@ -156,6 +157,7 @@ export default function AdminLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
+    <AdminOrderProvider>
     <div className="flex min-h-screen bg-[#f4f4f6]">
 
       {/* ── Desktop Sidebar ── */}
@@ -227,5 +229,6 @@ export default function AdminLayout() {
         </aside>
       </div>
     </div>
+    </AdminOrderProvider>
   );
 }
