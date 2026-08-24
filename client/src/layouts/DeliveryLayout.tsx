@@ -343,11 +343,6 @@ export default function DeliveryLayout() {
       >
         <div className="flex items-stretch justify-around px-1">
           {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.id === "home" || item.id === "list"
-                ? location.pathname === "/delivery"
-                : location.pathname === item.path;
-
             const isActiveDelivery = item.id === "active";
 
             return (

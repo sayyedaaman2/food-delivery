@@ -310,13 +310,11 @@ function OrderDetailView({
 }) {
   const { updateStatus } = useAdminOrders();
   const [justUpdated, setJustUpdated] = useState(false);
-  const [prevLabel, setPrevLabel] = useState("");
 
   const action = getStatusAction(order.status);
 
   function handleAdvance() {
     if (action && action !== "waiting") {
-      setPrevLabel(action.label);
       updateStatus(order.id, action.nextStatus);
       setJustUpdated(true);
       const t = setTimeout(() => setJustUpdated(false), 2500);
